@@ -24930,6 +24930,22 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 6144:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+/**
+ * The entrypoint for the action.
+ */
+const main_1 = __nccwpck_require__(399);
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+(0, main_1.run)();
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -24976,15 +24992,16 @@ function checkTasksExists() {
     }
 }
 function buildTasks() {
-    try {
-        (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js');
-    }
-    catch (error) {
-        if (error instanceof Error)
-            console.log(error.message);
+    (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js');
+    if (!fs_1.default.existsSync('./index.js')) {
+        throw new Error('Unable to find ./index.js from build task step.');
     }
 }
-async function importTasksDefinitions() { }
+async function importTasksDefinitions() {
+    console.log('dynamically importing user IssueBuilder...');
+    const builder = (await Promise.resolve(/* import() */).then(__nccwpck_require__.bind(__nccwpck_require__, 6144)));
+    new builder();
+}
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({
         apiKey
@@ -25003,11 +25020,11 @@ function getLinearApiKey() {
  */
 async function run() {
     try {
-        console.log('hello world');
-        createLinearSdkClient(getLinearApiKey());
+        console.log('Running Linear Auto Task action...');
         checkTasksExists();
         buildTasks();
         await importTasksDefinitions();
+        createLinearSdkClient(getLinearApiKey());
         return;
     }
     catch (error) {
@@ -26923,23 +26940,13 @@ module.exports = parseParams
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
-"use strict";
-var exports = __webpack_exports__;
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-/**
- * The entrypoint for the action.
- */
-const main_1 = __nccwpck_require__(399);
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-(0, main_1.run)();
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=index.js.map

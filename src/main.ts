@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import fs from 'fs'
 import { execSync } from 'child_process'
 import { LinearClient } from '@linear/sdk'
+import { IssueBuilder } from '@nkrkn/linear-auto-task'
 
 function checkTasksExists(): void {
   if (!fs.existsSync('./tasks')) {
@@ -13,16 +14,20 @@ function checkTasksExists(): void {
 }
 
 function buildTasks(): void {
-  try {
-    execSync(
-      'tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js'
-    )
-  } catch (error) {
-    if (error instanceof Error) console.log(error.message)
+  execSync(
+    'tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js'
+  )
+
+  if (!fs.existsSync('./index.js')) {
+    throw new Error('Unable to find ./index.js from build task step.')
   }
 }
 
-async function importTasksDefinitions(): Promise<void> {}
+async function importTasksDefinitions(): Promise<void> {
+  console.log('dynamically importing user IssueBuilder...')
+  const builder = (await import('./index.js')) as unknown as typeof IssueBuilder
+  new builder()
+}
 
 function createLinearSdkClient(apiKey: string): LinearClient {
   return new LinearClient({
@@ -46,11 +51,11 @@ function getLinearApiKey(): string {
  */
 export async function run(): Promise<void> {
   try {
-    console.log('hello world')
-    createLinearSdkClient(getLinearApiKey())
+    console.log('Running Linear Auto Task action...')
     checkTasksExists()
     buildTasks()
     await importTasksDefinitions()
+    createLinearSdkClient(getLinearApiKey())
     return
   } catch (error) {
     // Fail the workflow run if an error occurs
