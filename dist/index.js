@@ -24965,12 +24965,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
+//import { execSync } from "child_process"
 const sdk_1 = __nccwpck_require__(8851);
-function listWorkingDir() {
-    for (const file of fs_1.default.readdirSync('./')) {
-        console.log(file);
+function checkTasksExists() {
+    if (!fs_1.default.existsSync('./tasks')) {
+        throw new Error('Unable to find ./tasks directory in repository root.');
+    }
+    if (!fs_1.default.existsSync('./tasks/index.ts')) {
+        throw new Error('Unable to find ./tasks/index.ts in repository.');
     }
 }
+function buildTasks() { }
+async function importTasksDefinitions() { }
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({
         apiKey
@@ -24991,7 +24997,9 @@ async function run() {
     try {
         console.log('hello world');
         createLinearSdkClient(getLinearApiKey());
-        listWorkingDir();
+        checkTasksExists();
+        buildTasks();
+        await importTasksDefinitions();
         return;
     }
     catch (error) {

@@ -1,12 +1,20 @@
 import * as core from '@actions/core'
 import fs from 'fs'
+//import { execSync } from "child_process"
 import { LinearClient } from '@linear/sdk'
 
-function listWorkingDir(): void {
-  for (const file of fs.readdirSync('./')) {
-    console.log(file)
+function checkTasksExists(): void {
+  if (!fs.existsSync('./tasks')) {
+    throw new Error('Unable to find ./tasks directory in repository root.')
+  }
+  if (!fs.existsSync('./tasks/index.ts')) {
+    throw new Error('Unable to find ./tasks/index.ts in repository.')
   }
 }
+
+function buildTasks(): void {}
+
+async function importTasksDefinitions(): Promise<void> {}
 
 function createLinearSdkClient(apiKey: string): LinearClient {
   return new LinearClient({
@@ -32,7 +40,9 @@ export async function run(): Promise<void> {
   try {
     console.log('hello world')
     createLinearSdkClient(getLinearApiKey())
-    listWorkingDir()
+    checkTasksExists()
+    buildTasks()
+    await importTasksDefinitions()
     return
   } catch (error) {
     // Fail the workflow run if an error occurs
