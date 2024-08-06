@@ -24977,7 +24977,7 @@ function checkTasksExists() {
 }
 function buildTasks() {
     try {
-        (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --outfile ./index.js');
+        (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js');
     }
     catch (error) {
         if (error instanceof Error)

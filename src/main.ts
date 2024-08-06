@@ -14,7 +14,9 @@ function checkTasksExists(): void {
 
 function buildTasks(): void {
   try {
-    execSync('tsc ./tasks/index.ts --target esnext --outfile ./index.js')
+    execSync(
+      'tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js'
+    )
   } catch (error) {
     if (error instanceof Error) console.log(error.message)
   }
