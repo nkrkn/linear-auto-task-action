@@ -2,7 +2,6 @@ import * as core from '@actions/core'
 import fs from 'fs'
 import { execSync } from 'child_process'
 import { LinearClient } from '@linear/sdk'
-import { IssueBuilder } from '@nkrkn/linear-auto-task'
 
 function checkTasksExists(): void {
   if (!fs.existsSync('./tasks')) {
@@ -23,10 +22,9 @@ function buildTasks(): void {
   }
 }
 
-async function importTasksDefinitions(): Promise<void> {
-  console.log('dynamically importing user IssueBuilder...')
-  const builder = (await import('./index.js')) as unknown as typeof IssueBuilder
-  new builder()
+async function buildTasksDefinitions(): Promise<void> {
+  const out = execSync('node ./index.js')
+  console.log(out.toString())
 }
 
 function createLinearSdkClient(apiKey: string): LinearClient {
@@ -54,7 +52,7 @@ export async function run(): Promise<void> {
     console.log('Running Linear Auto Task action...')
     checkTasksExists()
     buildTasks()
-    await importTasksDefinitions()
+    await buildTasksDefinitions()
     createLinearSdkClient(getLinearApiKey())
     return
   } catch (error) {
