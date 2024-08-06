@@ -1,5 +1,12 @@
 import * as core from '@actions/core'
+import fs from "fs"
 import { LinearClient } from '@linear/sdk'
+
+function listWorkingDir(): void {
+  fs.readdirSync("./").forEach(file => {
+    console.log(file);
+  });
+}
 
 function createLinearSdkClient(apiKey: string): LinearClient {
   return new LinearClient({
@@ -25,6 +32,7 @@ export async function run(): Promise<void> {
   try {
     console.log('hello world')
     createLinearSdkClient(getLinearApiKey())
+    listWorkingDir()
     return
   } catch (error) {
     // Fail the workflow run if an error occurs
