@@ -1,11 +1,11 @@
 import * as core from '@actions/core'
-import fs from "fs"
+import fs from 'fs'
 import { LinearClient } from '@linear/sdk'
 
 function listWorkingDir(): void {
-  fs.readdirSync("./").forEach(file => {
-    console.log(file);
-  });
+  for (const file of fs.readdirSync('./')) {
+    console.log(file)
+  }
 }
 
 function createLinearSdkClient(apiKey: string): LinearClient {

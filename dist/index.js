@@ -24958,10 +24958,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
+const fs_1 = __importDefault(__nccwpck_require__(7147));
 const sdk_1 = __nccwpck_require__(8851);
+function listWorkingDir() {
+    for (const file of fs_1.default.readdirSync('./')) {
+        console.log(file);
+    }
+}
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({
         apiKey
@@ -24982,6 +24991,7 @@ async function run() {
     try {
         console.log('hello world');
         createLinearSdkClient(getLinearApiKey());
+        listWorkingDir();
         return;
     }
     catch (error) {
