@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import fs from 'fs'
-//import { execSync } from "child_process"
+import { execSync } from 'child_process'
 import { LinearClient } from '@linear/sdk'
 
 function checkTasksExists(): void {
@@ -12,7 +12,9 @@ function checkTasksExists(): void {
   }
 }
 
-function buildTasks(): void {}
+function buildTasks(): void {
+  execSync('tsc ./tasks/index.ts --target esnext --outfile ./index.js')
+}
 
 async function importTasksDefinitions(): Promise<void> {}
 

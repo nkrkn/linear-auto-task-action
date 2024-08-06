@@ -24965,7 +24965,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
-//import { execSync } from "child_process"
+const child_process_1 = __nccwpck_require__(2081);
 const sdk_1 = __nccwpck_require__(8851);
 function checkTasksExists() {
     if (!fs_1.default.existsSync('./tasks')) {
@@ -24975,7 +24975,9 @@ function checkTasksExists() {
         throw new Error('Unable to find ./tasks/index.ts in repository.');
     }
 }
-function buildTasks() { }
+function buildTasks() {
+    (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --outfile ./index.js');
+}
 async function importTasksDefinitions() { }
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({
@@ -25041,6 +25043,14 @@ module.exports = require("async_hooks");
 
 "use strict";
 module.exports = require("buffer");
+
+/***/ }),
+
+/***/ 2081:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("child_process");
 
 /***/ }),
 
