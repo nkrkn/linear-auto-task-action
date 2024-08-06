@@ -24976,14 +24976,14 @@ function checkTasksExists() {
     }
 }
 function buildTasks() {
-    (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js');
+    (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --outfile ./index.js');
     if (!fs_1.default.existsSync('./index.js')) {
         throw new Error('Unable to find ./index.js from build task step.');
     }
 }
 async function buildTasksDefinitions() {
     const out = (0, child_process_1.execSync)('node ./index.js');
-    console.log(out.toString());
+    console.log(`buffer: ${out.toString()}`);
 }
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({

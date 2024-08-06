@@ -13,9 +13,7 @@ function checkTasksExists(): void {
 }
 
 function buildTasks(): void {
-  execSync(
-    'tsc ./tasks/index.ts --target esnext --module amd --outfile ./index.js'
-  )
+  execSync('tsc ./tasks/index.ts --target esnext --outfile ./index.js')
 
   if (!fs.existsSync('./index.js')) {
     throw new Error('Unable to find ./index.js from build task step.')
@@ -24,7 +22,7 @@ function buildTasks(): void {
 
 async function buildTasksDefinitions(): Promise<void> {
   const out = execSync('node ./index.js')
-  console.log(out.toString())
+  console.log(`buffer: ${out.toString()}`)
 }
 
 function createLinearSdkClient(apiKey: string): LinearClient {
