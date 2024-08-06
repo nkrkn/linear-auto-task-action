@@ -1,4 +1,21 @@
 import * as core from '@actions/core'
+import { LinearClient } from '@linear/sdk'
+
+function createLinearSdkClient(apiKey: string): LinearClient {
+  return new LinearClient({
+    apiKey
+  })
+}
+
+function getLinearApiKey(): string {
+  const key = process.env.LINEAR_PERSONAL_API_KEY
+  if (!key) {
+    throw new Error(
+      "Unable to find LINEAR_PERSONAL_API_KEY. Make sure to add it as a secret in your repository's GitHub Action settings."
+    )
+  }
+  return key
+}
 
 /**
  * The main function for the action.
@@ -6,7 +23,9 @@ import * as core from '@actions/core'
  */
 export async function run(): Promise<void> {
   try {
-    core.setOutput('time', new Date().toTimeString())
+    console.log('hello world')
+    createLinearSdkClient(getLinearApiKey())
+    return
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
