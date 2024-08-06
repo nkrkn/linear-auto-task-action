@@ -24976,7 +24976,13 @@ function checkTasksExists() {
     }
 }
 function buildTasks() {
-    (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --outfile ./index.js');
+    try {
+        (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --outfile ./index.js');
+    }
+    catch (error) {
+        if (error instanceof Error)
+            console.log(error.message);
+    }
 }
 async function importTasksDefinitions() { }
 function createLinearSdkClient(apiKey) {

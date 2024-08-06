@@ -13,7 +13,11 @@ function checkTasksExists(): void {
 }
 
 function buildTasks(): void {
-  execSync('tsc ./tasks/index.ts --target esnext --outfile ./index.js')
+  try {
+    execSync('tsc ./tasks/index.ts --target esnext --outfile ./index.js')
+  } catch (error) {
+    if (error instanceof Error) console.log(error.message)
+  }
 }
 
 async function importTasksDefinitions(): Promise<void> {}
