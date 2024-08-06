@@ -56,3 +56,5 @@ jobs:
       - name: Test Local Action
         id: test-action
         uses: ./
+        env:
+          LINEAR_PERSONAL_API_KEY: "test_api_key"
