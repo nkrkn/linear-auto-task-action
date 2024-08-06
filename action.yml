@@ -9,10 +9,10 @@ branding:
   color: 'purple'
 
 # Define your inputs here.
-inputs:
+# inputs:
 
 # Define your outputs here.
-outputs:
+# outputs:
 
 runs:
   using: node20
