@@ -1,16 +1,16 @@
 {
-  "name": "typescript-action",
+  "name": "@nkrkn/linear-auto-task-action",
   "description": "GitHub Actions TypeScript template",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/nkrkn/linear-auto-task-action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/nkrkn/linear-auto-task-action"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/nkrkn/linear-auto-task-action/issues"
   },
   "keywords": [
     "actions",
