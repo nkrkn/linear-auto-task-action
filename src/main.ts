@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import fs from 'fs'
 import { execSync } from 'child_process'
 import { LinearClient } from '@linear/sdk'
+import type { Issue } from '@nkrkn/linear-auto-task'
 
 function checkTasksExists(): void {
   if (!fs.existsSync('./tasks')) {
@@ -12,13 +13,42 @@ function checkTasksExists(): void {
   }
 }
 
-async function buildTasksDefinitions(): Promise<void> {
-  console.log(fs.readdirSync('./'))
+function buildTasksDefinitions(): { issues: Issue[] } {
   if (!fs.existsSync('./index.js')) {
     throw new Error('Unable to find built ./index.js in repository.')
   }
   const out = execSync('node ./index.js')
-  console.log(`from output buffer: ${out.toString()}`)
+  return { issues: JSON.parse(out.toString()) as Issue[] }
+}
+
+function getPreviousTask(taskDef: Issue): Issue | null {
+  return null
+}
+
+function createNextTask(prevTask: Issue, taskDef: Issue): Issue {
+  return {} as unknown as Issue
+}
+
+function createFirstTask(taskDef: Issue): Issue {
+  return {} as unknown as Issue
+}
+
+async function postTask(client: LinearClient, task: Issue): Promise<void> {
+  return
+}
+
+async function processTasks(
+  client: LinearClient,
+  taskDefs: ReturnType<typeof buildTasksDefinitions>
+): Promise<void> {
+  for (const taskDef of taskDefs.issues) {
+    const prevTask = getPreviousTask(taskDef)
+    if (!prevTask) {
+      await postTask(client, createFirstTask(taskDef))
+    } else {
+      await postTask(client, createNextTask(prevTask, taskDef))
+    }
+  }
 }
 
 function createLinearSdkClient(apiKey: string): LinearClient {
@@ -45,8 +75,8 @@ export async function run(): Promise<void> {
   try {
     console.log('Running Linear Auto Task action...')
     checkTasksExists()
-    await buildTasksDefinitions()
-    createLinearSdkClient(getLinearApiKey())
+    const taskDefs = buildTasksDefinitions()
+    await processTasks(createLinearSdkClient(getLinearApiKey()), taskDefs)
     return
   } catch (error) {
     // Fail the workflow run if an error occurs

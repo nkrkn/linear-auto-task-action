@@ -1590,7 +1590,7 @@ class HttpClient {
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
         }
-        if (this._keepAlive && !useProxy) {
+        if (!useProxy) {
             agent = this._agent;
         }
         // if agent is already assigned use that agent.
@@ -1622,15 +1622,11 @@ class HttpClient {
             agent = tunnelAgent(agentOptions);
             this._proxyAgent = agent;
         }
-        // if reusing agent across request and tunneling agent isn't assigned create a new agent
-        if (this._keepAlive && !agent) {
+        // if tunneling agent isn't assigned create a new agent
+        if (!agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
             agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
             this._agent = agent;
-        }
-        // if not using private agent and tunnel agent isn't setup then use global agent
-        if (!agent) {
-            agent = usingSsl ? https.globalAgent : http.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
             // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -24975,13 +24971,35 @@ function checkTasksExists() {
         throw new Error('Unable to find ./tasks/index.ts in repository.');
     }
 }
-async function buildTasksDefinitions() {
-    console.log(fs_1.default.readdirSync('./'));
+function buildTasksDefinitions() {
     if (!fs_1.default.existsSync('./index.js')) {
         throw new Error('Unable to find built ./index.js in repository.');
     }
     const out = (0, child_process_1.execSync)('node ./index.js');
-    console.log(`from output buffer: ${out.toString()}`);
+    return { issues: JSON.parse(out.toString()) };
+}
+function getPreviousTask(taskDef) {
+    return null;
+}
+function createNextTask(prevTask, taskDef) {
+    return {};
+}
+function createFirstTask(taskDef) {
+    return {};
+}
+async function postTask(client, task) {
+    return;
+}
+async function processTasks(client, taskDefs) {
+    for (const taskDef of taskDefs.issues) {
+        const prevTask = getPreviousTask(taskDef);
+        if (!prevTask) {
+            await postTask(client, createFirstTask(taskDef));
+        }
+        else {
+            await postTask(client, createNextTask(prevTask, taskDef));
+        }
+    }
 }
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({
@@ -25003,8 +25021,8 @@ async function run() {
     try {
         console.log('Running Linear Auto Task action...');
         checkTasksExists();
-        await buildTasksDefinitions();
-        createLinearSdkClient(getLinearApiKey());
+        const taskDefs = buildTasksDefinitions();
+        await processTasks(createLinearSdkClient(getLinearApiKey()), taskDefs);
         return;
     }
     catch (error) {
