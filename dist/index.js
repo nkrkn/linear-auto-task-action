@@ -24976,10 +24976,12 @@ function checkTasksExists() {
     }
 }
 async function buildTasksDefinitions() {
-    if (!fs_1.default.existsSync('./index.ts'))
+    console.log(fs_1.default.readdirSync('./'));
+    if (!fs_1.default.existsSync('./index.js')) {
         throw new Error('Unable to find built ./index.js in repository.');
+    }
     const out = (0, child_process_1.execSync)('node ./index.js');
-    console.log(out.toString());
+    console.log(`from output buffer: ${out.toString()}`);
 }
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({
