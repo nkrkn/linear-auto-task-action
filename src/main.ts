@@ -13,7 +13,7 @@ function checkTasksExists(): void {
 }
 
 async function buildTasksDefinitions(): Promise<void> {
-  console.log(execSync("ls").toString())
+  console.log(fs.readdirSync("./"))
   if (!fs.existsSync('./index.js')){
     throw new Error('Unable to find built ./index.js in repository.')
   }
