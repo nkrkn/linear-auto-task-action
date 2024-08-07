@@ -13,10 +13,10 @@ function checkTasksExists(): void {
 }
 
 async function buildTasksDefinitions(): Promise<void> {
-  if (!fs.existsSync('./index.ts'))
+  if (!fs.existsSync('./index.js'))
     throw new Error('Unable to find built ./index.js in repository.')
   const out = execSync('node ./index.js')
-  console.log(out.toString())
+  console.log(`from output buffer: ${out.toString()}`)
 }
 
 function createLinearSdkClient(apiKey: string): LinearClient {
