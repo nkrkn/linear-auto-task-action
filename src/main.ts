@@ -12,17 +12,11 @@ function checkTasksExists(): void {
   }
 }
 
-function buildTasks(): void {
-  execSync('tsc ./tasks/index.ts --target esnext --outfile ./index.js')
-
-  if (!fs.existsSync('./index.js')) {
-    throw new Error('Unable to find ./index.js from build task step.')
-  }
-}
-
 async function buildTasksDefinitions(): Promise<void> {
+  if (!fs.existsSync('./index.ts'))
+    throw new Error('Unable to find built ./index.js in repository.')
   const out = execSync('node ./index.js')
-  console.log(`buffer: ${out.toString()}`)
+  console.log(out.toString())
 }
 
 function createLinearSdkClient(apiKey: string): LinearClient {
@@ -49,7 +43,6 @@ export async function run(): Promise<void> {
   try {
     console.log('Running Linear Auto Task action...')
     checkTasksExists()
-    buildTasks()
     await buildTasksDefinitions()
     createLinearSdkClient(getLinearApiKey())
     return

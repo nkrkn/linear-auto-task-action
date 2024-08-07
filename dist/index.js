@@ -24975,15 +24975,11 @@ function checkTasksExists() {
         throw new Error('Unable to find ./tasks/index.ts in repository.');
     }
 }
-function buildTasks() {
-    (0, child_process_1.execSync)('tsc ./tasks/index.ts --target esnext --outfile ./index.js');
-    if (!fs_1.default.existsSync('./index.js')) {
-        throw new Error('Unable to find ./index.js from build task step.');
-    }
-}
 async function buildTasksDefinitions() {
+    if (!fs_1.default.existsSync('./index.ts'))
+        throw new Error('Unable to find built ./index.js in repository.');
     const out = (0, child_process_1.execSync)('node ./index.js');
-    console.log(`buffer: ${out.toString()}`);
+    console.log(out.toString());
 }
 function createLinearSdkClient(apiKey) {
     return new sdk_1.LinearClient({
@@ -25005,7 +25001,6 @@ async function run() {
     try {
         console.log('Running Linear Auto Task action...');
         checkTasksExists();
-        buildTasks();
         await buildTasksDefinitions();
         createLinearSdkClient(getLinearApiKey());
         return;
