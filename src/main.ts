@@ -1,9 +1,8 @@
 import * as core from '@actions/core'
 import fs from 'fs'
 import { execSync } from 'child_process'
-import { LinearClient } from '@linear/sdk'
+import { LinearClient, IssuesQuery } from '@linear/sdk'
 import type { Issue } from '@nkrkn/linear-auto-task'
-import { PaginationSortOrder } from '@linear/sdk/dist/_generated_documents'
 
 function checkTasksExists(): void {
   if (!fs.existsSync('./tasks')) {
@@ -42,9 +41,10 @@ async function getPreviousTaskCreationDate(
       // only need one
       first: 1,
       // we want the most recent task
+      // @ts-expect-error cannot import _generated_sdk for some reason
       sort: {
         createdAt: {
-          order: PaginationSortOrder.Descending
+          order: 'Descending'
         }
       }
     })

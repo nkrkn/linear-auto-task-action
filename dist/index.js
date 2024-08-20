@@ -24976,7 +24976,6 @@ const core = __importStar(__nccwpck_require__(9093));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const child_process_1 = __nccwpck_require__(2081);
 const sdk_1 = __nccwpck_require__(2593);
-const _generated_documents_1 = __nccwpck_require__(5220);
 function checkTasksExists() {
     if (!fs_1.default.existsSync('./tasks')) {
         throw new Error('Unable to find ./tasks directory in repository root.');
@@ -25009,9 +25008,10 @@ async function getPreviousTaskCreationDate(client, taskDef) {
             // only need one
             first: 1,
             // we want the most recent task
+            // @ts-expect-error cannot import _generated_sdk
             sort: {
                 createdAt: {
-                    order: _generated_documents_1.PaginationSortOrder.Descending
+                    order: 'Descending'
                 }
             }
         });
@@ -25110,14 +25110,6 @@ async function run() {
             core.setFailed(error.message);
     }
 }
-
-
-/***/ }),
-
-/***/ 5220:
-/***/ ((module) => {
-
-module.exports = eval("require")("@linear/sdk/dist/_generated_documents");
 
 
 /***/ }),
