@@ -100,7 +100,11 @@ async function shouldCreateTask(
 
 async function postTask(client: LinearClient, taskDef: Issue): Promise<void> {
   try {
-    await client.createIssue(taskDef)
+    // remove non-Linear fields from def
+    const { repeatOptions, autoTaskName, ...linearIssue } = taskDef
+    // set the issue title
+    linearIssue.title = autoTaskName
+    await client.createIssue(linearIssue)
     // TODO: return created Issue for logging
   } catch (e) {
     console.log(e)
