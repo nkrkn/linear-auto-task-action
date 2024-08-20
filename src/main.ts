@@ -3,6 +3,7 @@ import fs from 'fs'
 import { execSync } from 'child_process'
 import { LinearClient } from '@linear/sdk'
 import type { Issue } from '@nkrkn/linear-auto-task'
+import { PaginationSortOrder } from '@linear/sdk/dist/_generated_documents'
 
 function checkTasksExists(): void {
   if (!fs.existsSync('./tasks')) {
@@ -18,35 +19,104 @@ function buildTasksDefinitions(): { issues: Issue[] } {
     throw new Error('Unable to find built ./index.js in repository.')
   }
   const out = execSync('node ./index.js')
-  return { issues: JSON.parse(out.toString()) as Issue[] }
+  return JSON.parse(out.toString()) as { issues: Issue[] }
 }
 
-function getPreviousTask(taskDef: Issue): Issue | null {
-  return null
+// used to determine if we already created a task today
+async function getPreviousTaskCreationDate(
+  client: LinearClient,
+  taskDef: Issue
+): Promise<Date | null> {
+  try {
+    const issues = client.issues({
+      filter: {
+        title: {
+          containsIgnoreCase: taskDef.autoTaskName
+        },
+        team: {
+          id: {
+            eq: taskDef.teamId
+          }
+        }
+      },
+      // only need one
+      first: 1,
+      // we want the most recent task
+      sort: {
+        createdAt: {
+          order: PaginationSortOrder.Descending
+        }
+      }
+    })
+
+    return (await issues).nodes[0]?.createdAt
+  } catch (e) {
+    console.log(e)
+    // TODO: error handling / logging
+    throw e
+  }
 }
 
-function createNextTask(prevTask: Issue, taskDef: Issue): Issue {
-  return {} as unknown as Issue
+function isSameDay(d1: Date, d2: Date): boolean {
+  return d1.setHours(0, 0, 0, 0) === d2.setHours(0, 0, 0, 0)
 }
 
-function createFirstTask(taskDef: Issue): Issue {
-  return {} as unknown as Issue
+// compares current time and taskDef config to determine if new task should be created
+async function shouldCreateTask(
+  client: LinearClient,
+  taskDef: Issue
+): Promise<boolean> {
+  const prevCreatedDate = await getPreviousTaskCreationDate(client, taskDef)
+  if (prevCreatedDate && isSameDay(prevCreatedDate, new Date())) return false
+
+  const { type } = taskDef.repeatOptions
+  switch (type) {
+    case 'daily': {
+      return true
+    }
+    case 'weekly': {
+      const daysOfWeek = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday'
+      ] as const
+      const currentDayOfWeek = daysOfWeek[new Date().getDay()]
+      const repeatTaskDay = taskDef.repeatOptions.day
+      return currentDayOfWeek === repeatTaskDay
+    }
+    case 'monthly': {
+      const currentDate = new Date().getDate()
+      return currentDate === taskDef.repeatOptions.day
+    }
+    default: {
+      return false
+    }
+  }
 }
 
-async function postTask(client: LinearClient, task: Issue): Promise<void> {
-  return
+async function postTask(client: LinearClient, taskDef: Issue): Promise<void> {
+  try {
+    await client.createIssue(taskDef)
+    // TODO: return created Issue for logging
+  } catch (e) {
+    console.log(e)
+    // TODO: error handling / logging
+    throw e
+  }
 }
 
 async function processTasks(
   client: LinearClient,
   taskDefs: ReturnType<typeof buildTasksDefinitions>
 ): Promise<void> {
+  // TODO: parallelize promises
   for (const taskDef of taskDefs.issues) {
-    const prevTask = getPreviousTask(taskDef)
-    if (!prevTask) {
-      await postTask(client, createFirstTask(taskDef))
-    } else {
-      await postTask(client, createNextTask(prevTask, taskDef))
+    if (await shouldCreateTask(client, taskDef)) {
+      await postTask(client, taskDef)
     }
   }
 }
@@ -76,6 +146,8 @@ export async function run(): Promise<void> {
     console.log('Running Linear Auto Task action...')
     checkTasksExists()
     const taskDefs = buildTasksDefinitions()
+    console.log('Found these task definitions:\n')
+    console.log(JSON.stringify(taskDefs))
     await processTasks(createLinearSdkClient(getLinearApiKey()), taskDefs)
     return
   } catch (error) {
