@@ -25008,7 +25008,7 @@ async function getPreviousTaskCreationDate(client, taskDef) {
             // only need one
             first: 1,
             // we want the most recent task
-            // @ts-expect-error cannot import _generated_sdk
+            // @ts-expect-error cannot import _generated_sdk for some reason
             sort: {
                 createdAt: {
                     order: 'Descending'
@@ -25061,7 +25061,11 @@ async function shouldCreateTask(client, taskDef) {
 }
 async function postTask(client, taskDef) {
     try {
-        await client.createIssue(taskDef);
+        // remove non-Linear fields from def
+        const { repeatOptions, autoTaskName, ...linearIssue } = taskDef;
+        // set the issue title
+        linearIssue.title = autoTaskName;
+        await client.createIssue(linearIssue);
         // TODO: return created Issue for logging
     }
     catch (e) {
