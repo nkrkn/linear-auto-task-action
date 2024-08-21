@@ -24988,8 +24988,14 @@ function buildTasksDefinitions() {
     if (!fs_1.default.existsSync('./index.js')) {
         throw new Error('Unable to find built ./index.js in repository.');
     }
-    const out = (0, child_process_1.execSync)('node ./index.js');
-    return JSON.parse(out.toString());
+    try {
+        const out = (0, child_process_1.execSync)('node ./index.js');
+        return JSON.parse(out.toString());
+    }
+    catch (e) {
+        console.error(e);
+        throw new Error('Unable to build task definitions from ./index.js');
+    }
 }
 // used to determine if we already created a task today
 async function getPreviousTaskCreationDate(client, taskDef) {

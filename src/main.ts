@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import fs from 'fs'
 import { execSync } from 'child_process'
-import { LinearClient, IssuesQuery } from '@linear/sdk'
+import { LinearClient } from '@linear/sdk'
 import type { Issue } from '@nkrkn/linear-auto-task'
 
 function checkTasksExists(): void {
@@ -17,8 +17,13 @@ function buildTasksDefinitions(): { issues: Issue[] } {
   if (!fs.existsSync('./index.js')) {
     throw new Error('Unable to find built ./index.js in repository.')
   }
-  const out = execSync('node ./index.js')
-  return JSON.parse(out.toString()) as { issues: Issue[] }
+  try {
+    const out = execSync('node ./index.js')
+    return JSON.parse(out.toString()) as { issues: Issue[] }
+  } catch (e) {
+    console.error(e)
+    throw new Error('Unable to build task definitions from ./index.js')
+  }
 }
 
 // used to determine if we already created a task today
