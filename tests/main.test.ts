@@ -8,6 +8,7 @@
 
 // import * as core from '@actions/core'
 // import * as main from '../src/main'
+import { describe, test, vi, beforeEach } from 'vitest'
 
 // Mock the action's main function
 //const runMock = jest.spyOn(main, 'run')
@@ -21,7 +22,7 @@
 
 describe('action', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // debugMock = jest.spyOn(core, 'debug').mockImplementation()
     // errorMock = jest.spyOn(core, 'error').mockImplementation()
@@ -30,5 +31,5 @@ describe('action', () => {
     // setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
   })
 
-  it('dummy', () => {})
+  test('dummy', () => {})
 })
