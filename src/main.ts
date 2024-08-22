@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
-import fs from 'fs'
-import { execSync } from 'child_process'
+import fs from 'node:fs'
+import { execSync } from 'node:child_process'
 import { LinearClient } from '@linear/sdk'
 import type { Issue } from '@nkrkn/linear-auto-task'
 
-function checkTasksExists(): void {
+export function checkTasksExists(): void {
   if (!fs.existsSync('./tasks')) {
     throw new Error('Unable to find ./tasks directory in repository root.')
   }
@@ -13,7 +13,7 @@ function checkTasksExists(): void {
   }
 }
 
-function buildTasksDefinitions(): { issues: Issue[] } {
+export function buildTasksDefinitions(): { issues: Issue[] } {
   if (!fs.existsSync('./index.js')) {
     throw new Error('Unable to find built ./index.js in repository.')
   }
@@ -21,85 +21,82 @@ function buildTasksDefinitions(): { issues: Issue[] } {
     const out = execSync('node ./index.js')
     return JSON.parse(out.toString()) as { issues: Issue[] }
   } catch (e) {
-    console.error(e)
     throw new Error('Unable to build task definitions from ./index.js')
   }
 }
 
 // used to determine if we already created a task today
-async function getPreviousTaskCreationDate(
+export async function getPreviousTaskCreationDate(
   client: LinearClient,
   taskDef: Issue
 ): Promise<Date | null> {
-  try {
-    const issues = client.issues({
-      filter: {
-        title: {
-          containsIgnoreCase: taskDef.autoTaskName
-        },
-        team: {
-          id: {
-            eq: taskDef.teamId
-          }
-        }
+  const issues = client.issues({
+    filter: {
+      title: {
+        containsIgnoreCase: taskDef.autoTaskName
       },
-      // only need one
-      first: 1,
-      // we want the most recent task
-      // @ts-expect-error cannot import _generated_sdk for some reason
-      sort: {
-        createdAt: {
-          order: 'Descending'
+      team: {
+        id: {
+          eq: taskDef.teamId
         }
       }
-    })
+    },
+    // only need one
+    first: 1,
+    // we want the most recent task
+    // @ts-expect-error cannot import _generated_sdk for some reason
+    sort: {
+      createdAt: {
+        order: 'Descending'
+      }
+    }
+  })
 
-    return (await issues).nodes[0]?.createdAt
-  } catch (e) {
-    console.log(e)
-    // TODO: error handling / logging
-    throw e
-  }
+  return (await issues).nodes[0]?.createdAt
 }
 
-function isSameDay(d1: Date, d2: Date): boolean {
+export function isSameDay(d1: Date, d2: Date): boolean {
   return d1.setHours(0, 0, 0, 0) === d2.setHours(0, 0, 0, 0)
 }
 
 // compares current time and taskDef config to determine if new task should be created
-async function shouldCreateTask(
+export async function shouldCreateTask(
   client: LinearClient,
   taskDef: Issue
 ): Promise<boolean> {
-  const prevCreatedDate = await getPreviousTaskCreationDate(client, taskDef)
-  if (prevCreatedDate && isSameDay(prevCreatedDate, new Date())) return false
+  try {
+    const prevCreatedDate = await getPreviousTaskCreationDate(client, taskDef)
+    if (prevCreatedDate && isSameDay(prevCreatedDate, new Date())) return false
 
-  const { type } = taskDef.repeatOptions
-  switch (type) {
-    case 'daily': {
-      return true
+    const { type } = taskDef.repeatOptions
+    switch (type) {
+      case 'daily': {
+        return true
+      }
+      case 'weekly': {
+        const daysOfWeek = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday'
+        ] as const
+        const currentDayOfWeek = daysOfWeek[new Date().getDay()]
+        const repeatTaskDay = taskDef.repeatOptions.day
+        return currentDayOfWeek === repeatTaskDay
+      }
+      case 'monthly': {
+        const currentDate = new Date().getDate()
+        return currentDate === taskDef.repeatOptions.day
+      }
+      default: {
+        return false
+      }
     }
-    case 'weekly': {
-      const daysOfWeek = [
-        'Sunday',
-        'Monday',
-        'Tuesday',
-        'Wednesday',
-        'Thursday',
-        'Friday',
-        'Saturday'
-      ] as const
-      const currentDayOfWeek = daysOfWeek[new Date().getDay()]
-      const repeatTaskDay = taskDef.repeatOptions.day
-      return currentDayOfWeek === repeatTaskDay
-    }
-    case 'monthly': {
-      const currentDate = new Date().getDate()
-      return currentDate === taskDef.repeatOptions.day
-    }
-    default: {
-      return false
-    }
+  } catch (e) {
+    throw new Error('Unable to fetch previous task creation date.')
   }
 }
 
@@ -155,7 +152,7 @@ export async function run(): Promise<void> {
     console.log('Running Linear Auto Task action...')
     checkTasksExists()
     const taskDefs = buildTasksDefinitions()
-    console.log('Found these task definitions:\n')
+    console.log('Found these task definitions:')
     console.log(JSON.stringify(taskDefs))
     await processTasks(createLinearSdkClient(getLinearApiKey()), taskDefs)
     return

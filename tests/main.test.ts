@@ -8,28 +8,129 @@
 
 // import * as core from '@actions/core'
 // import * as main from '../src/main'
-import { describe, test, vi, beforeEach } from 'vitest'
+import { describe, test, vi, beforeEach, assert, expect } from 'vitest'
+import { fs, vol } from 'memfs'
+import { execSync } from 'node:child_process'
+import {
+  checkTasksExists,
+  buildTasksDefinitions,
+  isSameDay,
+  shouldCreateTask,
+  getPreviousTaskCreationDate
+} from '../src/main'
+import { LinearClient } from '@linear/sdk'
 
-// Mock the action's main function
-//const runMock = jest.spyOn(main, 'run')
+const client = new LinearClient({ apiKey: 'hello' })
 
-// Mock the GitHub Actions core library
-// let debugMock: jest.SpiedFunction<typeof core.debug>
-// let errorMock: jest.SpiedFunction<typeof core.error>
-// let getInputMock: jest.SpiedFunction<typeof core.getInput>
-// let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
-// let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
+vi.mock('node:fs')
+vi.mock('node:fs/promises')
+vi.mock('node:child_process')
+const mocks = vi.hoisted(() => {
+  return {
+    getPreviousTaskCreationDate: vi.fn()
+  }
+})
+vi.mock('../src/main', async importOriginal => {
+  const actual = await importOriginal()
+  return {
+    ...(actual as object),
+    getPreviousTaskCreationDate: mocks.getPreviousTaskCreationDate
+  }
+})
 
-describe('action', () => {
+describe('helper functions', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-
-    // debugMock = jest.spyOn(core, 'debug').mockImplementation()
-    // errorMock = jest.spyOn(core, 'error').mockImplementation()
-    // getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
-    // setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
-    // setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+    // reset the state of in-memory fs
+    vol.reset()
   })
 
-  test('dummy', () => {})
+  test('isSameDay()', () => {
+    const d1 = new Date()
+    const d2 = new Date()
+    assert(isSameDay(d1, d2))
+
+    const d3 = new Date('2024-08-08')
+    const d4 = new Date('2024-09-08')
+    assert(!isSameDay(d3, d4))
+  })
+
+  describe('checkTasksExists()', () => {
+    test('happy path', () => {
+      fs.mkdirSync(`${__dirname}/../tasks`, { recursive: true })
+      fs.writeFileSync(`${__dirname}/../tasks/index.ts`, 'hello')
+
+      assert.doesNotThrow(checkTasksExists, Error)
+    })
+    test('throws when ./tasks not found', () => {
+      assert.throws(
+        checkTasksExists,
+        'Unable to find ./tasks directory in repository root.'
+      )
+    })
+    test('throws when ./tasks/index.ts not found', () => {
+      fs.mkdirSync(`${__dirname}/../tasks`, { recursive: true })
+
+      assert.throws(
+        checkTasksExists,
+        'Unable to find ./tasks/index.ts in repository.'
+      )
+    })
+  })
+
+  describe('buildTaskDefinitions()', () => {
+    beforeEach(() => {
+      vi.mocked(execSync).mockClear()
+    })
+    test('happy path', () => {
+      fs.mkdirSync(__dirname, { recursive: true })
+      fs.writeFileSync(`${__dirname}/../index.js`, 'hello')
+      vi.mocked(execSync).mockReturnValue(Buffer.from('{"issues":[]}'))
+      assert.deepEqual(buildTasksDefinitions(), { issues: [] })
+    })
+    test('throws when index.js not found', () => {
+      fs.mkdirSync(__dirname, { recursive: true })
+      assert.throws(
+        buildTasksDefinitions,
+        'Unable to find built ./index.js in repository.'
+      )
+    })
+    test('throws when execSync fails', () => {
+      fs.mkdirSync(__dirname, { recursive: true })
+      fs.writeFileSync(`${__dirname}/../index.js`, 'hello')
+      vi.mocked(execSync).mockImplementation(() => {
+        throw new Error()
+      })
+      assert.throws(
+        buildTasksDefinitions,
+        'Unable to build task definitions from ./index.js'
+      )
+    })
+  })
+
+  describe('shoudCreateTask', () => {
+    beforeEach(() => {
+      vi.mocked(getPreviousTaskCreationDate).mockReset()
+    })
+    describe('happy path', () => {
+      test.todo('daily shoudCreateTask')
+      test.todo('daily not shoudCreateTask')
+      test.todo('monthly shoudCreateTask')
+      test.todo('monthly not shoudCreateTask')
+      test.todo('weekly shoudCreateTask')
+      test.todo('weekly not shoudCreateTask')
+    })
+    test('throws when fetch previous fails', async () => {
+      vi.mocked(getPreviousTaskCreationDate).mockImplementation(() => {
+        throw new Error()
+      })
+
+      await expect(async () => {
+        await shouldCreateTask(client, {
+          teamId: '',
+          autoTaskName: '',
+          repeatOptions: { type: 'daily' }
+        })
+      }).rejects.toThrowError('Unable to fetch previous task creation date.')
+    })
+  })
 })

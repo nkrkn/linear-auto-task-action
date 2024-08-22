@@ -24971,98 +24971,100 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkTasksExists = checkTasksExists;
+exports.buildTasksDefinitions = buildTasksDefinitions;
+exports.getPreviousTaskCreationDate = getPreviousTaskCreationDate;
+exports.isSameDay = isSameDay;
+exports.shouldCreateTask = shouldCreateTask;
 exports.run = run;
 const core = __importStar(__nccwpck_require__(9093));
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const child_process_1 = __nccwpck_require__(2081);
+const node_fs_1 = __importDefault(__nccwpck_require__(7561));
+const node_child_process_1 = __nccwpck_require__(7718);
 const sdk_1 = __nccwpck_require__(2593);
 function checkTasksExists() {
-    if (!fs_1.default.existsSync('./tasks')) {
+    if (!node_fs_1.default.existsSync('./tasks')) {
         throw new Error('Unable to find ./tasks directory in repository root.');
     }
-    if (!fs_1.default.existsSync('./tasks/index.ts')) {
+    if (!node_fs_1.default.existsSync('./tasks/index.ts')) {
         throw new Error('Unable to find ./tasks/index.ts in repository.');
     }
 }
 function buildTasksDefinitions() {
-    if (!fs_1.default.existsSync('./index.js')) {
+    if (!node_fs_1.default.existsSync('./index.js')) {
         throw new Error('Unable to find built ./index.js in repository.');
     }
     try {
-        const out = (0, child_process_1.execSync)('node ./index.js');
+        const out = (0, node_child_process_1.execSync)('node ./index.js');
         return JSON.parse(out.toString());
     }
     catch (e) {
-        console.error(e);
         throw new Error('Unable to build task definitions from ./index.js');
     }
 }
 // used to determine if we already created a task today
 async function getPreviousTaskCreationDate(client, taskDef) {
-    try {
-        const issues = client.issues({
-            filter: {
-                title: {
-                    containsIgnoreCase: taskDef.autoTaskName
-                },
-                team: {
-                    id: {
-                        eq: taskDef.teamId
-                    }
-                }
+    const issues = client.issues({
+        filter: {
+            title: {
+                containsIgnoreCase: taskDef.autoTaskName
             },
-            // only need one
-            first: 1,
-            // we want the most recent task
-            // @ts-expect-error cannot import _generated_sdk for some reason
-            sort: {
-                createdAt: {
-                    order: 'Descending'
+            team: {
+                id: {
+                    eq: taskDef.teamId
                 }
             }
-        });
-        return (await issues).nodes[0]?.createdAt;
-    }
-    catch (e) {
-        console.log(e);
-        // TODO: error handling / logging
-        throw e;
-    }
+        },
+        // only need one
+        first: 1,
+        // we want the most recent task
+        // @ts-expect-error cannot import _generated_sdk for some reason
+        sort: {
+            createdAt: {
+                order: 'Descending'
+            }
+        }
+    });
+    return (await issues).nodes[0]?.createdAt;
 }
 function isSameDay(d1, d2) {
     return d1.setHours(0, 0, 0, 0) === d2.setHours(0, 0, 0, 0);
 }
 // compares current time and taskDef config to determine if new task should be created
 async function shouldCreateTask(client, taskDef) {
-    const prevCreatedDate = await getPreviousTaskCreationDate(client, taskDef);
-    if (prevCreatedDate && isSameDay(prevCreatedDate, new Date()))
-        return false;
-    const { type } = taskDef.repeatOptions;
-    switch (type) {
-        case 'daily': {
-            return true;
-        }
-        case 'weekly': {
-            const daysOfWeek = [
-                'Sunday',
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday',
-                'Saturday'
-            ];
-            const currentDayOfWeek = daysOfWeek[new Date().getDay()];
-            const repeatTaskDay = taskDef.repeatOptions.day;
-            return currentDayOfWeek === repeatTaskDay;
-        }
-        case 'monthly': {
-            const currentDate = new Date().getDate();
-            return currentDate === taskDef.repeatOptions.day;
-        }
-        default: {
+    try {
+        const prevCreatedDate = await getPreviousTaskCreationDate(client, taskDef);
+        if (prevCreatedDate && isSameDay(prevCreatedDate, new Date()))
             return false;
+        const { type } = taskDef.repeatOptions;
+        switch (type) {
+            case 'daily': {
+                return true;
+            }
+            case 'weekly': {
+                const daysOfWeek = [
+                    'Sunday',
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday',
+                    'Saturday'
+                ];
+                const currentDayOfWeek = daysOfWeek[new Date().getDay()];
+                const repeatTaskDay = taskDef.repeatOptions.day;
+                return currentDayOfWeek === repeatTaskDay;
+            }
+            case 'monthly': {
+                const currentDate = new Date().getDate();
+                return currentDate === taskDef.repeatOptions.day;
+            }
+            default: {
+                return false;
+            }
         }
+    }
+    catch (e) {
+        throw new Error('Unable to fetch previous task creation date.');
     }
 }
 async function postTask(client, taskDef) {
@@ -25109,7 +25111,7 @@ async function run() {
         console.log('Running Linear Auto Task action...');
         checkTasksExists();
         const taskDefs = buildTasksDefinitions();
-        console.log('Found these task definitions:\n');
+        console.log('Found these task definitions:');
         console.log(JSON.stringify(taskDefs));
         await processTasks(createLinearSdkClient(getLinearApiKey()), taskDefs);
         return;
@@ -25153,14 +25155,6 @@ module.exports = require("async_hooks");
 
 "use strict";
 module.exports = require("buffer");
-
-/***/ }),
-
-/***/ 2081:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("child_process");
 
 /***/ }),
 
@@ -25236,11 +25230,27 @@ module.exports = require("net");
 
 /***/ }),
 
+/***/ 7718:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:child_process");
+
+/***/ }),
+
 /***/ 5673:
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("node:events");
+
+/***/ }),
+
+/***/ 7561:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs");
 
 /***/ }),
 
