@@ -1,7 +1,7 @@
 {
   "name": "@nkrkn/linear-auto-task-action",
   "description": "GitHub Actions TypeScript template",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "author": "Nicholas Ramkissoon",
   "private": true,
   "homepage": "https://github.com/nkrkn/linear-auto-task-action",
