@@ -19,8 +19,18 @@ import {
   getPreviousTaskCreationDate
 } from '../src/main'
 import { LinearClient } from '@linear/sdk'
+import { Issue } from '@nkrkn/linear-auto-task'
 
 const client = new LinearClient({ apiKey: 'hello' })
+const daysOfWeek = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday'
+] as const
 
 vi.mock('node:fs')
 vi.mock('node:fs/promises')
@@ -112,12 +122,104 @@ describe('helper functions', () => {
       vi.mocked(getPreviousTaskCreationDate).mockReset()
     })
     describe('happy path', () => {
-      test.todo('daily shoudCreateTask')
-      test.todo('daily not shoudCreateTask')
-      test.todo('monthly shoudCreateTask')
-      test.todo('monthly not shoudCreateTask')
-      test.todo('weekly shoudCreateTask')
-      test.todo('weekly not shoudCreateTask')
+      test('daily shoudCreateTask', async () => {
+        const task: Issue = {
+          repeatOptions: { type: 'daily' },
+          autoTaskName: 'hello',
+          teamId: 'team'
+        }
+
+        vi.mocked(getPreviousTaskCreationDate).mockImplementation(
+          async () => new Date('2024-08-08')
+        )
+        expect(
+          await shouldCreateTask(client, task, getPreviousTaskCreationDate)
+        ).toBeTruthy()
+      })
+      test('daily not shoudCreateTask', async () => {
+        const task: Issue = {
+          repeatOptions: { type: 'daily' },
+          autoTaskName: 'hello',
+          teamId: 'team'
+        }
+
+        vi.mocked(getPreviousTaskCreationDate).mockImplementation(
+          async () => new Date()
+        )
+        expect(
+          await shouldCreateTask(client, task, getPreviousTaskCreationDate)
+        ).toBeFalsy()
+      })
+      test('monthly shoudCreateTask', async () => {
+        const todaysDate = new Date().getDate()
+        const task: Issue = {
+          repeatOptions: { type: 'monthly', day: todaysDate },
+          autoTaskName: 'hello',
+          teamId: 'team'
+        }
+
+        const prevDate = new Date(2022, 0, todaysDate)
+
+        vi.mocked(getPreviousTaskCreationDate).mockImplementation(
+          async () => prevDate
+        )
+        expect(
+          await shouldCreateTask(client, task, getPreviousTaskCreationDate)
+        ).toBeTruthy()
+      })
+      test('monthly not shoudCreateTask', async () => {
+        const task: Issue = {
+          repeatOptions: { type: 'monthly', day: 1 },
+          autoTaskName: 'hello',
+          teamId: 'team'
+        }
+
+        vi.mocked(getPreviousTaskCreationDate).mockImplementation(
+          async () => new Date('2024-01-02')
+        )
+        expect(
+          await shouldCreateTask(client, task, getPreviousTaskCreationDate)
+        ).toBeFalsy()
+      })
+      test('weekly shoudCreateTask', async () => {
+        const task: Issue = {
+          repeatOptions: {
+            type: 'weekly',
+            day: daysOfWeek[new Date().getDay()]
+          },
+          autoTaskName: 'hello',
+          teamId: 'team'
+        }
+
+        vi.mocked(getPreviousTaskCreationDate).mockImplementation(async () => {
+          const oneWeekAgo = new Date()
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+          return oneWeekAgo
+        })
+        expect(
+          await shouldCreateTask(client, task, getPreviousTaskCreationDate)
+        ).toBeTruthy()
+      })
+
+      test('weekly not shoudCreateTask', async () => {
+        const notOneWeekAgo = new Date()
+        notOneWeekAgo.setDate(notOneWeekAgo.getDate() - 3)
+        const task: Issue = {
+          repeatOptions: {
+            type: 'weekly',
+            day: daysOfWeek[notOneWeekAgo.getDay()]
+          },
+          autoTaskName: 'hello',
+          teamId: 'team'
+        }
+
+        vi.mocked(getPreviousTaskCreationDate).mockImplementation(async () => {
+          return new Date('2022-01-01')
+        })
+        expect(
+          await shouldCreateTask(client, task, getPreviousTaskCreationDate)
+        ).toBeFalsy()
+      })
     })
     test('throws when fetch previous fails', async () => {
       vi.mocked(getPreviousTaskCreationDate).mockImplementation(() => {
@@ -125,11 +227,15 @@ describe('helper functions', () => {
       })
 
       await expect(async () => {
-        await shouldCreateTask(client, {
-          teamId: '',
-          autoTaskName: '',
-          repeatOptions: { type: 'daily' }
-        })
+        await shouldCreateTask(
+          client,
+          {
+            teamId: '',
+            autoTaskName: '',
+            repeatOptions: { type: 'daily' }
+          },
+          getPreviousTaskCreationDate
+        )
       }).rejects.toThrowError('Unable to fetch previous task creation date.')
     })
   })

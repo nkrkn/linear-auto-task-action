@@ -62,10 +62,11 @@ export function isSameDay(d1: Date, d2: Date): boolean {
 // compares current time and taskDef config to determine if new task should be created
 export async function shouldCreateTask(
   client: LinearClient,
-  taskDef: Issue
+  taskDef: Issue,
+  getPreviousDate: typeof getPreviousTaskCreationDate
 ): Promise<boolean> {
   try {
-    const prevCreatedDate = await getPreviousTaskCreationDate(client, taskDef)
+    const prevCreatedDate = await getPreviousDate(client, taskDef)
     if (prevCreatedDate && isSameDay(prevCreatedDate, new Date())) return false
 
     const { type } = taskDef.repeatOptions
@@ -121,7 +122,7 @@ async function processTasks(
 ): Promise<void> {
   // TODO: parallelize promises
   for (const taskDef of taskDefs.issues) {
-    if (await shouldCreateTask(client, taskDef)) {
+    if (await shouldCreateTask(client, taskDef, getPreviousTaskCreationDate)) {
       await postTask(client, taskDef)
     }
   }

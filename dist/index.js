@@ -25030,9 +25030,9 @@ function isSameDay(d1, d2) {
     return d1.setHours(0, 0, 0, 0) === d2.setHours(0, 0, 0, 0);
 }
 // compares current time and taskDef config to determine if new task should be created
-async function shouldCreateTask(client, taskDef) {
+async function shouldCreateTask(client, taskDef, getPreviousDate) {
     try {
-        const prevCreatedDate = await getPreviousTaskCreationDate(client, taskDef);
+        const prevCreatedDate = await getPreviousDate(client, taskDef);
         if (prevCreatedDate && isSameDay(prevCreatedDate, new Date()))
             return false;
         const { type } = taskDef.repeatOptions;
@@ -25085,7 +25085,7 @@ async function postTask(client, taskDef) {
 async function processTasks(client, taskDefs) {
     // TODO: parallelize promises
     for (const taskDef of taskDefs.issues) {
-        if (await shouldCreateTask(client, taskDef)) {
+        if (await shouldCreateTask(client, taskDef, getPreviousTaskCreationDate)) {
             await postTask(client, taskDef);
         }
     }
