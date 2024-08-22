@@ -35,16 +35,12 @@ const daysOfWeek = [
 vi.mock('node:fs')
 vi.mock('node:fs/promises')
 vi.mock('node:child_process')
-const mocks = vi.hoisted(() => {
-  return {
-    getPreviousTaskCreationDate: vi.fn()
-  }
-})
+
 vi.mock('../src/main', async importOriginal => {
   const actual = await importOriginal()
   return {
     ...(actual as object),
-    getPreviousTaskCreationDate: mocks.getPreviousTaskCreationDate
+    getPreviousTaskCreationDate: vi.fn()
   }
 })
 
