@@ -42,18 +42,18 @@
     "typescript": "^5.5.4"
   },
   "devDependencies": {
-    "@types/node": "^22.4.1",
+    "@types/node": "^22.7.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@vercel/ncc": "^0.38.1",
+    "@vercel/ncc": "^0.38.2",
     "eslint": "^8.57.0",
-    "eslint-plugin-github": "^5.0.1",
+    "eslint-plugin-github": "^5.0.2",
     "eslint-plugin-jsonc": "^2.16.0",
     "eslint-plugin-prettier": "^5.2.1",
     "make-coverage-badge": "^1.2.0",
-    "memfs": "^4.11.1",
+    "memfs": "^4.12.0",
     "prettier": "^3.3.3",
     "prettier-eslint": "^16.3.0",
-    "vitest": "^2.0.5"
+    "vitest": "^2.1.1"
   }
 }
